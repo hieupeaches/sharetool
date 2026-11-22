@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="vi" data-type="product" data-radius="soft" data-buttons="arrow" data-motion>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SHARETOOL: thuê dụng cụ làm mô hình cho sinh viên</title>
+<meta name="description" content="Dao rọc, tấm lót cắt, thước thép, súng bắn keo và thước T cho thuê theo lượt 3 ngày, nhận và trả tại sảnh ký túc xá ở TP.HCM.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SHARETOOL: thuê dụng cụ làm mô hình cho sinh viên">
+<meta property="og:description" content="Thuê dụng cụ mô hình và vẽ kỹ thuật theo lượt 3 ngày, từ 30.000đ.">
+<meta property="og:image" content="share.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#e5e1d8">
+<!-- <link rel="canonical" href="https://[tên miền của SHARETOOL]/"> : thêm khi có tên miền -->
+<meta name="site-kind" content="other">
+<meta name="page-type" content="product">
+<link rel="stylesheet" href="fonts/archivo.css">
+<link rel="stylesheet" href="assets/system.css">
+<link rel="stylesheet" href="assets/ui/cards.css">
+<link rel="stylesheet" href="assets/motion/motion.css">
+<link rel="stylesheet" href="assets/layout/layout.css">
+<style>
+:root {
+  --p-bg: #e5e1d8; --p-surface: #dad5ca; --p-ink: #2a1d17; --p-muted: #65564c;
+  --p-accent: #456f3a; --p-accent-ink: #ffffff; --p-action: #456f3a; --p-action-ink: #ffffff;
+  --p-inv-bg: #2a1d17; --p-inv-surface: #352822; --p-inv-ink: #e5e1d8; --p-inv-muted: #9e968e;
+  --p-inv-accent: #e5e1d8; --p-inv-accent-ink: #2a1d17; --p-inv-action: #e5e1d8; --p-inv-action-ink: #2a1d17;
+  --font-display: "Archivo", system-ui, sans-serif;
+  --font-text: "Archivo", system-ui, sans-serif;
+  --display-weight: 400;
+  --display-tracking: -0.025em;
+  --display-tracking-xl: -0.035em;
+  --display-stretch: 110%;
+  --ly-scale: 0.9;
+}
+</style>
+<script>document.documentElement.classList.add('m-enter');setTimeout(()=>document.documentElement.classList.add('m-enter-done'),700)</script>
+<script>document.documentElement.classList.add('mo-js');setTimeout(()=>document.documentElement.classList.add('mo-safe'),2500)</script>
+<link rel="modulepreload" href="assets/moments/moments.js">
+<link rel="modulepreload" href="assets/moments/lib.js">
+<link rel="modulepreload" href="assets/moments/picture-develops/moment.js">
+<!-- page CSS: chỉ những gì nằm trong danh sách dụng cụ, đơn thuê và khung ảnh mà bộ kit chưa có -->
+<style>
+  /* hàng dụng cụ: tên và giá ở dòng 1, thông số và tình trạng kho ở dòng 2, nút thêm ở cột phải */
+  #kho .rows > li { grid-template-columns: minmax(0, 1fr) auto; align-items: center; padding-block: 10px; }
+  #kho .rows__value { grid-row: 1 / span 2; display: flex; align-items: center; gap: var(--s-3); }
+  #kho .rows__value .btn { height: 40px; }
+  .stock { color: var(--ink); white-space: nowrap; }
+  @media (max-width: 639px) {
+    #kho .rows > li { grid-template-columns: minmax(0, 1fr); }
+    #kho .rows__value { grid-column: 1; grid-row: auto; justify-content: space-between; }
+    #kho .rows__value .btn { height: 44px; }
+  }
+  .stock::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: var(--s-2); background: var(--action); vertical-align: .05em; }
+  .stock--low::before { background: #a86b12; }
+  .stock--out::before { background: color-mix(in oklab, #c0392b 80%, var(--ink)); }
+  #combo .tile__media { --tile-ratio: 21 / 10; }
+  #combo .tile .btn { justify-self: start; }
+  /* đơn thuê */
+  .order { display: grid; gap: var(--s-4); align-content: start; }
+  .order__lines { list-style: none; margin: 0; padding: 0; }
+  .order__lines li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s-1) var(--s-4); padding-block: var(--s-3); border-bottom: 1px solid var(--line); }
+  .order__lines li > span:last-child { font-variant-numeric: tabular-nums; text-align: right; }
+  .order__lines small { grid-column: 1; color: var(--muted); font-size: var(--t-small); }
+  .order__lines .qty { grid-column: 2; display: inline-flex; gap: var(--s-1); justify-self: end; }
+  .order__lines .qty button { width: 32px; height: 32px; border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--bg); color: var(--ink); font: inherit; cursor: pointer; }
+  .order__sum { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s-2) var(--s-4); font-variant-numeric: tabular-nums; }
+  .order__sum dd { margin: 0; text-align: right; }
+  .order__total { font: var(--display-weight) var(--t-h3)/1.1 var(--font-display); letter-spacing: var(--display-tracking); }
+  .order__empty { color: var(--ink); }
+  #dat-thue .form .btn-row .btn { min-width: 220px; }
+  /* so sánh giá trên dải tối */
+  .develop { margin: 0; border-radius: var(--r-lg); overflow: hidden; height: min(560px, var(--ly-fit)); }
+  .develop > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  @media (max-width: 1023px) { .develop { height: auto; aspect-ratio: 4 / 3; margin-top: var(--s-7); } }
+  .steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+  .steps > li { counter-increment: step; display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: var(--s-1) var(--s-4); padding-block: var(--s-4); border-bottom: 1px solid var(--line); }
+  .steps > li:first-child { padding-top: 0; }
+  .steps > li::before { content: counter(step); grid-row: span 2; font: var(--display-weight) var(--t-h3)/1 var(--font-display); }
+  .steps h3 { font: 500 var(--t-card)/1.3 var(--font-text); }
+  img[data-fallback] { background: var(--surface); }
+  @media (min-width: 640px) and (max-width: 1023px) { #combo .tile__media { --tile-ratio: 4 / 5; } }
+  @media (max-width: 639px) {
+    /* the hero's photograph is shorter on a phone so the first screen ends on it, whole */
+    .hero--product .hero__stage:has(> img) { aspect-ratio: 5 / 4; }
+    #combo .tile__media { --tile-ratio: 4 / 5; }
+    #comboTiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #comboTiles > .tile { grid-column: auto; }
+    #comboTiles .tile > p:not(.tile__facts), #comboTiles .tile__facts { display: none; }
+    #comboTiles .tile__head { display: grid; gap: var(--s-1); }
+    #comboTiles .tile .btn { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<!-- type: product (site-kind other): cho thuê dụng cụ làm mô hình và vẽ kỹ thuật theo lượt 3 ngày
+     deal: hero product (film dealt first, no film: dealt again), nav nav-mega, close close-type, footer footer-dark,
+           rhythm dark-band, buttons arrow, mark stack, grounds none (kind other)
+     palette green-mat-chocolate: nền đá ấm như mặt bàn xưởng, màu nhấn xanh của tấm lót cắt
+     type archivo (fraunces, bricolage, albert dealt first: their text faces lack Vietnamese glyphs)
+     moments: picture-develops in #so-sanh (the dark band) -->
+<header class="nav">
+  <div class="wrap nav__bar">
+    <a class="skip-link" href="#top">Đến nội dung</a>
+    <a class="nav__logo" href="#top"><span class="mark" data-mark="stack" aria-hidden="true"></span>SHARETOOL</a>
+    <nav class="nav__links" aria-label="Chính">
+      <div class="nav__item">
+        <a class="nav__link" href="#kho">Dụng cụ <svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <div class="nav__menu">
+          <div class="wrap grid">
+            <div class="menu-col span-3">
+              <p class="t-label">Cắt mô hình</p>
+              <a href="#kho">Dao rọc Olfa A-1<span>Lưỡi mới mỗi lượt</span></a>
+              <a href="#kho">Tấm lót cắt A3<span>Có lưới đo 1 cm</span></a>
+              <a href="#kho">Thước thép 60 cm<span>Tì dao khi cắt thẳng</span></a>
+            </div>
+            <div class="menu-col span-3">
+              <p class="t-label">Dán và vẽ</p>
+              <a href="#kho">Súng bắn keo 60W<span>Dán formex, gỗ balsa</span></a>
+              <a href="#kho">Thước T 60 cm<span>Bài vẽ kỹ thuật</span></a>
+            </div>
+            <a class="menu-card span-3 start-10" href="#combo">
+              <div class="panel"><img class="frame__img" data-photo="cat" data-w="640" alt="" loading="lazy"></div>
+              <span class="t-card">Combo cắt mô hình</span>
+              <span class="t-small muted">Ba món, 100.000đ một lượt</span>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="nav__item"><a class="nav__link" href="#combo">Combo</a></div>
+      <div class="nav__item"><a class="nav__link" href="#cach-thue">Cách thuê</a></div>
+      <div class="nav__item"><a class="nav__link" href="#hoi-dap">Hỏi đáp</a></div>
+    </nav>
+    <div class="nav__actions">
+      <a class="btn btn--primary" href="#dat-thue">Đặt thuê dụng cụ<span class="cart-n" data-cart-n hidden></span></a>
+    </div>
+    <button class="nav__toggle" type="button" aria-expanded="false" aria-label="Mở menu">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 5h14M2 13h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero hero--product" data-enter aria-labelledby="hero-h">
+    <div class="wrap"><div class="hero-text hero__in">
+      <div class="hero__head">
+        <div>
+          <h1 id="hero-h">Thuê dụng cụ mô hình cho sinh viên</h1>
+          <p class="hero__lead">Dao rọc, tấm lót cắt, thước thép, súng keo và thước T, thuê theo lượt 3 ngày từ <span data-assumed>30.000đ</span>. Nhận và trả ở sảnh ký túc xá.</p>
+        </div>
+        <div class="btn-row"><a class="btn btn--primary" href="#dat-thue">Đặt thuê dụng cụ</a><a class="btn btn--secondary" href="#kho">Xem kho dụng cụ</a></div>
+      </div>
+      <div class="hero__stage">
+        <img data-photo="hero" data-w="2400" alt="Tấm lót cắt màu xanh có lưới, dao rọc và kéo đặt trên đó" style="--ly-pos: 50% 55%" fetchpriority="high" data-source="shoot" data-subject="dụng cụ cắt mô hình">
+      </div>
+    </div></div>
+  </section>
+
+  <section class="section" id="kho" style="--hm: 2" aria-labelledby="kho-h">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="kho-h">Kho dụng cụ. <span class="muted">45 món, giá cho một lượt 3 ngày.</span></h2>
+      </div>
+      <div class="grid grid--top fill" data-peek>
+        <ul class="rows span-6" id="toolRows"></ul>
+        <div class="frame frame--photo frame--fill span-6 start-7" id="toolPics"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="combo" aria-labelledby="combo-h">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="combo-h">Combo theo công đoạn. <span class="muted">Rẻ hơn thuê lẻ từng món.</span></h2>
+        <p id="comboSoon"></p>
+      </div>
+      <div class="grid" id="comboTiles"></div>
+    </div>
+  </section>
+
+  <section class="section ground-inverse" id="so-sanh" aria-labelledby="so-sanh-h">
+    <div class="wrap grid grid--top">
+      <div class="span-6">
+        <div class="section-head">
+          <h2 id="so-sanh-h">Rẻ hơn mua mới <span id="cmpPct">82%</span></h2>
+          <p>Giá mua lấy từ các trang thương mại điện tử nhóm đã khảo sát. Phần lớn sinh viên chỉ cần những món này vài ngày trước hạn nộp mô hình.</p>
+        </div>
+        <ul class="rows" id="cmpRows"></ul>
+      </div>
+      <figure class="develop span-6 start-7" data-moment="picture-develops"><img data-photo="model" data-w="1400" alt="Mô hình kiến trúc làm bằng bìa cứng và gỗ" width="1280" height="880" loading="lazy" data-source="shoot" data-subject="mô hình kiến trúc"></figure>
+    </div>
+  </section>
+
+  <section class="section" id="cach-thue" style="--hm: 2" aria-labelledby="cach-thue-h">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="cach-thue-h">Thuê trong bốn bước</h2>
+        <p>Đặt trước 15:00 thì thường nhận được đồ ngay trong ngày.</p>
+      </div>
+      <div class="grid grid--top fill">
+        <ol class="steps span-6">
+          <li><h3>Chọn dụng cụ hoặc combo</h3><p>Thêm vào đơn thuê, số còn trong kho cập nhật theo từng món.</p></li>
+          <li><h3>Gửi đơn thuê</h3><p>Chọn số lượt, ngày nhận và điểm nhận. Trang tự tính tiền thuê và tiền cọc.</p></li>
+          <li><h3>Nhận đồ ở sảnh ký túc xá</h3><p>Cộng tác viên nhắn Zalo hẹn giờ, giao đồ và nhận cọc tại điểm hẹn.</p></li>
+          <li><h3>Trả đồ, nhận lại tiền cọc</h3><p>Hết lượt thì trả ở điểm hẹn. Kiểm tra nhanh rồi hoàn cọc ngay.</p></li>
+        </ol>
+        <div class="frame frame--photo frame--fill span-6 start-7"><img class="frame__img" data-photo="lammh" data-w="1400" alt="Người đang làm mô hình kiến trúc tại bàn" loading="lazy" data-source="shoot" data-subject="làm mô hình"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="dat-thue" style="--hm: 2" aria-labelledby="dat-thue-h">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="dat-thue-h">Đơn thuê. <span class="muted">Trả tiền khi nhận đồ.</span></h2>
+      </div>
+      <div class="grid grid--top">
+        <form class="form span-6" id="bookForm" action="mailto:don@sharetool.example" method="post" enctype="text/plain" data-fix="Còn {n} ô cần sửa." novalidate>
+          <div class="field"><label for="f-turns">Số lượt</label>
+            <select id="f-turns" name="turns" required></select></div>
+          <div class="field"><label for="f-from">Ngày nhận</label>
+            <input id="f-from" name="from" type="date" required aria-describedby="f-from-err">
+            <p class="field__error" id="f-from-err" hidden>Chọn ngày nhận từ hôm nay trở đi.</p></div>
+          <div class="field field--full"><label for="f-place">Điểm nhận và trả</label>
+            <select id="f-place" name="place" required aria-describedby="f-place-err"><option value="">Chọn điểm nhận</option></select>
+            <p class="field__error" id="f-place-err" hidden>Chọn nơi bạn muốn nhận đồ.</p></div>
+          <div class="field"><label for="f-name">Họ và tên</label>
+            <input id="f-name" name="name" type="text" autocomplete="name" required minlength="2" aria-describedby="f-name-err">
+            <p class="field__error" id="f-name-err" hidden>Viết họ và tên người nhận đồ.</p></div>
+          <div class="field"><label for="f-zalo">Số Zalo</label>
+            <input id="f-zalo" name="zalo" type="tel" inputmode="numeric" autocomplete="tel" required pattern="0[0-9]{9}" aria-describedby="f-zalo-err">
+            <p class="field__error" id="f-zalo-err" hidden>Viết số Zalo gồm 10 chữ số, bắt đầu bằng 0.</p></div>
+          <div class="btn-row"><button class="btn btn--primary" type="submit">Gửi đơn thuê</button></div>
+          <p class="form__status" role="status" data-form-status></p>
+          <p class="t-small muted">SHARETOOL nhắn Zalo xác nhận trong vòng 2 giờ.</p>
+        </form>
+        <div class="order span-6 start-7" aria-live="polite">
+          <ul class="order__lines" id="orderLines"></ul>
+          <dl class="order__sum" id="orderSum"></dl>
+          <ul class="rows rows--spec">
+            <li><span class="rows__name">Tiền cọc</span><span class="rows__value" data-assumed>100.000đ một món, súng keo 150.000đ</span></li>
+            <li><span class="rows__name">Trả trễ</span><span class="rows__value" data-assumed>thêm giá 1 ngày cho mỗi ngày trễ</span></li>
+            <li><span class="rows__name">Đồ dính keo, bẩn nhiều</span><span class="rows__value" data-assumed>phí vệ sinh 10.000đ một món</span></li>
+            <li><span class="rows__name">Giao tận phòng</span><span class="rows__value" data-assumed>10.000đ một đơn</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--faq" id="hoi-dap" style="--hm: 2" aria-labelledby="hoi-dap-h">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="hoi-dap-h">Câu hỏi về gia hạn và trả đồ</h2>
+        <p>Câu khác thì <a class="link" href="https://zalo.me/0900000000" data-zalo target="_blank" rel="noopener">nhắn Zalo cho SHARETOOL</a>.</p>
+      </div>
+      <div class="grid grid--top fill">
+        <div class="faq span-6">
+          <div class="faq__item"><h3>Muốn thuê thêm ngày thì sao?</h3><p>Nhắn Zalo trước hạn trả một ngày. Nếu chưa có ai đặt món đó, bạn gia hạn thêm lượt với giá như cũ.</p></div>
+          <div class="faq__item"><h3>Làm hỏng hoặc mất dụng cụ thì sao?</h3><p>Lưỡi dao cùn, thước trầy nhẹ thì không tính. Gãy hoặc mất thì trừ vào cọc theo mức đã thỏa thuận khi nhận.</p></div>
+          <div class="faq__item"><h3>Không ở ký túc xá thì nhận ở đâu?</h3><p>Chọn giao tận phòng trong đơn thuê, cộng tác viên mang đồ tới phòng trọ của bạn.</p></div>
+          <div class="faq__item"><h3>Trả tiền bằng cách nào?</h3><p>Tiền mặt hoặc chuyển khoản lúc nhận đồ. Gửi đơn không cần trả trước.</p></div>
+        </div>
+        <div class="frame frame--photo span-6 start-7" style="--ratio: 72%"><img class="frame__img" data-photo="mohinh" data-w="1400" alt="Mô hình một toà nhà đặt trên mặt bàn trắng" loading="lazy" data-source="shoot" data-subject="mô hình kiến trúc"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer closing footer--dark ground-inverse" id="contact" aria-labelledby="close-h">
+  <div class="wrap">
+    <div class="closing__cta close--type">
+      <div class="section-head">
+        <h2 id="close-h">Đặt thuê dụng cụ</h2>
+        <p>Một lượt 3 ngày từ 30.000đ. SHARETOOL nhắn Zalo xác nhận trong vòng 2 giờ.</p>
+      </div>
+      <a class="btn btn--primary btn--xl" href="#dat-thue">Đặt thuê dụng cụ</a>
+    </div>
+    <div class="closing__links">
+      <div class="grid">
+        <div class="span-4 stack-4">
+          <a class="nav__logo" href="#top"><span class="mark" data-mark="stack" aria-hidden="true"></span>SHARETOOL</a>
+          <p class="footer__lede">Cho sinh viên Kiến trúc và Kỹ thuật thuê dụng cụ làm mô hình ở TP.HCM.</p>
+        </div>
+        <div class="span-3 footer__col"><h3>Dụng cụ</h3><ul><li><a href="#kho">Kho dụng cụ</a></li><li><a href="#combo">Combo</a></li></ul></div>
+        <div class="span-3 footer__col"><h3>Thuê</h3><ul><li><a href="#cach-thue">Cách thuê</a></li><li><a href="#hoi-dap">Hỏi đáp</a></li></ul></div>
+        <div class="span-2 footer__col"><h3>SHARETOOL</h3><ul><li><a href="https://zalo.me/0900000000" data-zalo target="_blank" rel="noopener">Zalo</a></li><li><a href="quan-tri.html">Quản trị</a></li></ul></div>
+      </div>
+      <div class="footer__legal">
+        <span>&copy; 2026 SHARETOOL, dự án môn Khởi nghiệp và Đổi mới sáng tạo, ĐH Bách khoa TP.HCM</span>
+        <a class="credits" href="credits.html">Ảnh qua Unsplash</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<nav class="actionbar" aria-label="Thao tác nhanh">
+  <a class="btn btn--primary" href="#dat-thue">Đặt thuê dụng cụ</a>
+</nav>
+
+<script src="app.js"></script>
+<script src="site.js"></script>
+<script type="module" src="assets/system.js"></script>
+<script type="module" src="assets/motion/motion.js"></script>
+<script type="module" src="assets/layout/layout.js"></script>
+</body>
+</html>

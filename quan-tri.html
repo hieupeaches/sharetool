@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="vi" data-type="product" data-radius="soft" data-buttons="arrow">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SHARETOOL: quản trị kho và đơn thuê</title>
+<meta name="description" content="Trang quản trị của SHARETOOL: kho dụng cụ, combo và đơn thuê.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="fonts/archivo.css">
+<link rel="stylesheet" href="assets/system.css">
+<style>
+:root { --p-bg:#e5e1d8; --p-surface:#dad5ca; --p-ink:#2a1d17; --p-muted:#65564c; --p-accent:#456f3a; --p-accent-ink:#fff; --p-action:#456f3a; --p-action-ink:#fff;
+  --p-inv-bg:#2a1d17; --p-inv-surface:#352822; --p-inv-ink:#e5e1d8; --p-inv-muted:#9e968e; --p-inv-accent:#e5e1d8; --p-inv-accent-ink:#2a1d17; --p-inv-action:#e5e1d8; --p-inv-action-ink:#2a1d17;
+  --font-display:"Archivo",system-ui,sans-serif; --font-text:"Archivo",system-ui,sans-serif; --display-weight:400; --display-tracking:-0.025em; }
+body { background: var(--bg); }
+.admin { padding: var(--s-7) 0 var(--s-9); }
+.top { display: flex; justify-content: space-between; align-items: end; gap: var(--s-5); flex-wrap: wrap; margin-bottom: var(--s-6); }
+.top h1 { font-size: var(--t-h2); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--s-3); margin-bottom: var(--s-6); }
+.stats div { border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-4); background: var(--card, var(--surface)); }
+.stats b { display: block; font: var(--display-weight) 28px/1.1 var(--font-display); }
+.stats span { color: var(--muted); font-size: var(--t-small); }
+.tabs { display: flex; gap: var(--s-2); flex-wrap: wrap; margin-bottom: var(--s-4); }
+.tabs button { height: 40px; padding: 0 var(--s-4); border: 1px solid var(--line-strong); border-radius: 999px; background: none; color: var(--ink); font: 500 var(--t-small) var(--font-text); cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.panel-tab[hidden] { display: none; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line-strong); border-radius: var(--r-md); }
+table { width: 100%; border-collapse: collapse; min-width: 760px; font-size: var(--t-small); }
+th, td { text-align: left; padding: var(--s-3) var(--s-4); border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 500; background: var(--surface); }
+tr:last-child td { border-bottom: 0; }
+tr.is-hidden td { opacity: .55; }
+.mini { height: 32px; padding: 0 var(--s-3); border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--bg); color: var(--ink); font: 500 13px var(--font-text); cursor: pointer; }
+.mini + .mini { margin-left: var(--s-1); }
+.step { display: inline-flex; align-items: center; gap: var(--s-2); }
+.step b { min-width: 52px; text-align: center; font-variant-numeric: tabular-nums; }
+.hint { color: var(--muted); font-size: var(--t-small); margin-top: var(--s-3); }
+.tools { display: flex; gap: var(--s-2); flex-wrap: wrap; margin-top: var(--s-4); }
+select.st { height: 32px; border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--bg); color: var(--ink); font: inherit; }
+dialog { border: 1px solid var(--line-strong); border-radius: var(--r-lg); padding: var(--s-6); width: min(720px, calc(100% - 32px)); background: var(--bg); color: var(--ink); }
+dialog::backdrop { background: rgb(42 29 23 / .45); }
+dialog h2 { font-size: var(--t-h3); margin-bottom: var(--s-5); }
+.form .field--full { grid-column: 1 / -1; }
+.picks { display: grid; gap: var(--s-2); }
+.picks label { display: flex; gap: var(--s-3); align-items: center; font-weight: 400; }
+.picks input[type=number] { width: 72px; height: 36px; }
+.login { max-width: 420px; }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: var(--s-3) var(--s-5); border-radius: 999px; font-size: var(--t-small); }
+.toast:empty { display: none; }
+</style>
+</head>
+<body>
+<main id="top" class="admin"><div class="wrap" id="root"></div></main>
+<p class="toast" role="status" id="toast"></p>
+<dialog id="dlg"></dialog>
+<script src="app.js"></script>
+<script>
+(function () {
+  const S = window.ST, $ = s => document.querySelector(s), root = $("#root"), dlg = $("#dlg");
+  const { vnd, esc } = S, FLOW = ["Mới", "Đã xác nhận", "Đang thuê", "Đã trả", "Đã hủy"];
+  let tab = "tools", tt;
+  const toast = m => { $("#toast").textContent = m; clearTimeout(tt); tt = setTimeout(() => $("#toast").textContent = "", 3000); };
+  const save = () => { if (!S.save()) toast("Chưa lưu được: bộ nhớ trình duyệt đã đầy, hãy dùng ảnh nhỏ hơn."); };
+  const authed = () => sessionStorage.getItem("st_admin") === "1";
+
+  function render() {
+    if (!authed()) {
+      root.innerHTML = `<form class="form login" id="login" novalidate><h1 class="field--full" style="font-size:var(--t-h2)">Quản trị SHARETOOL</h1>
+        <div class="field field--full"><label for="pw">Mật khẩu</label><input id="pw" type="password" autocomplete="current-password"><p class="field__error" id="pw-err" hidden>Mật khẩu chưa đúng.</p></div>
+        <div class="btn-row"><button class="btn btn--primary" type="submit">Đăng nhập</button><a class="btn btn--secondary" href="index.html">Về trang chính</a></div></form>`;
+      $("#login").onsubmit = e => { e.preventDefault(); if ($("#pw").value === S.SITE.adminPassword) { sessionStorage.setItem("st_admin", "1"); render(); } else $("#pw-err").hidden = false; };
+      $("#pw").focus(); return;
+    }
+    const T = S.db.tools, C = S.db.combos, O = S.db.orders;
+    root.innerHTML = `
+      <div class="top"><div><h1>Quản trị</h1><p class="muted">Thay đổi ở đây hiện ngay trên trang chính của trình duyệt này.</p></div>
+        <div class="btn-row"><a class="btn btn--secondary" href="index.html">Xem trang chính</a><button class="btn btn--secondary" id="logout" type="button">Đăng xuất</button></div></div>
+      <div class="stats">
+        <div><b>${T.reduce((a, t) => a + t.total, 0)}</b><span>dụng cụ trong kho</span></div>
+        <div><b>${T.reduce((a, t) => a + t.available, 0)}</b><span>món sẵn sàng</span></div>
+        <div><b>${T.reduce((a, t) => a + t.total - t.available, 0)}</b><span>món đang cho thuê hoặc đang sửa</span></div>
+        <div><b>${O.filter(o => o.status === "Mới").length}</b><span>đơn mới chờ xác nhận</span></div>
+        <div><b>${vnd(O.filter(o => o.status === "Đã trả").reduce((a, o) => a + o.rent + o.ship, 0))}</b><span>doanh thu đơn đã trả</span></div>
+      </div>
+      <div class="tabs" role="tablist">
+        <button role="tab" data-t="tools" aria-selected="${tab === "tools"}">Dụng cụ</button>
+        <button role="tab" data-t="combos" aria-selected="${tab === "combos"}">Combo</button>
+        <button role="tab" data-t="orders" aria-selected="${tab === "orders"}">Đơn thuê (${O.length})</button>
+      </div>
+      <section class="panel-tab" ${tab === "tools" ? "" : "hidden"}>
+        <div class="tablewrap"><table><thead><tr><th>Dụng cụ</th><th>Giá một lượt</th><th>Cọc</th><th>Sẵn sàng / tổng</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+        ${T.map(t => `<tr class="${t.hidden ? "is-hidden" : ""}"><td><b>${esc(t.name)}</b><br><span class="muted">${esc(t.cat)}${t.hidden ? ", đang ẩn" : ""}</span></td>
+          <td>${vnd(t.price)}<br><span class="muted">khoảng ${vnd(S.perDay(t.price))} một ngày</span></td><td>${vnd(t.deposit)}</td>
+          <td><span class="step"><button class="mini" data-dec="${t.id}" aria-label="Bớt một ${esc(t.name)}">−</button><b>${t.available}/${t.total}</b><button class="mini" data-inc="${t.id}" aria-label="Thêm một ${esc(t.name)}">+</button></span></td>
+          <td>${S.stock(t.available, t.restock).text}</td>
+          <td><button class="mini" data-edit="${t.id}">Sửa</button><button class="mini" data-hide="${t.id}">${t.hidden ? "Hiện" : "Ẩn"}</button><button class="mini" data-del="${t.id}">Xóa</button></td></tr>`).join("")}
+        </tbody></table></div>
+        <p class="hint">Nút − và + đổi số món đang nằm trong kho, ví dụ khi một món đem đi sửa.</p>
+        <div class="tools"><button class="btn btn--primary" id="addTool" type="button">Thêm dụng cụ</button><button class="mini" id="exp">Tải dữ liệu về</button><label class="mini" style="display:inline-flex;align-items:center">Nhập dữ liệu từ file<input type="file" id="imp" accept="application/json" hidden></label><button class="mini" id="reset">Khôi phục dữ liệu mẫu</button></div>
+      </section>
+      <section class="panel-tab" ${tab === "combos" ? "" : "hidden"}>
+        <div class="tablewrap"><table><thead><tr><th>Combo</th><th>Gồm</th><th>Giá một lượt</th><th>Ghép được</th><th></th></tr></thead><tbody>
+        ${C.map(c => `<tr class="${c.hidden ? "is-hidden" : ""}"><td><b>${esc(c.name)}</b>${c.soon ? "<br><span class='muted'>Sắp có</span>" : ""}</td>
+          <td>${c.parts.map(p => `${p.qty} × ${esc(S.tool(p.id)?.name || "(đã xóa)")}`).join("<br>") || "–"}</td>
+          <td>${c.soon ? "–" : vnd(c.price)}${!c.soon && S.comboRetail(c) ? `<br><span class="muted">thuê lẻ ${vnd(S.comboRetail(c))}</span>` : ""}</td>
+          <td>${c.soon ? "–" : S.comboAvail(c) + " combo"}</td>
+          <td><button class="mini" data-cedit="${c.id}">Sửa</button><button class="mini" data-chide="${c.id}">${c.hidden ? "Hiện" : "Ẩn"}</button><button class="mini" data-cdel="${c.id}">Xóa</button></td></tr>`).join("")}
+        </tbody></table></div>
+        <p class="hint">Số combo ghép được tự tính từ số món lẻ còn trong kho.</p>
+        <div class="tools"><button class="btn btn--primary" id="addCombo" type="button">Thêm combo</button></div>
+      </section>
+      <section class="panel-tab" ${tab === "orders" ? "" : "hidden"}>
+        ${O.length ? `<div class="tablewrap"><table><thead><tr><th>Mã, ngày đặt</th><th>Khách</th><th>Món thuê</th><th>Thời gian</th><th>Thanh toán</th><th>Trạng thái</th></tr></thead><tbody>
+        ${O.map(o => `<tr><td><b>${o.id.toUpperCase()}</b><br><span class="muted">${new Date(o.created).toLocaleString("vi-VN")}</span></td>
+          <td>${esc(o.name)}<br><a class="link" href="https://zalo.me/${esc(o.phone)}" target="_blank" rel="noopener">${esc(o.phone)}</a><br><span class="muted">${esc(o.place)}</span></td>
+          <td>${o.lines.map(l => `${l.qty} × ${esc(l.name)}`).join("<br>")}</td>
+          <td>${S.date(o.from)} đến ${S.date(o.to)}<br><span class="muted">${o.turns} lượt</span></td>
+          <td>${vnd(o.rent + o.ship)}<br><span class="muted">cọc ${vnd(o.deposit)}</span></td>
+          <td><select class="st" data-ord="${o.id}" aria-label="Trạng thái đơn ${o.id.toUpperCase()}">${FLOW.map(s => `<option ${s === o.status ? "selected" : ""}>${s}</option>`).join("")}</select></td></tr>`).join("")}
+        </tbody></table></div>
+        <p class="hint">Chuyển sang "Đang thuê" sẽ trừ số món trong kho, combo trừ từng món bên trong. Chuyển sang "Đã trả" hoặc "Đã hủy" sẽ cộng lại.</p>`
+        : `<p>Chưa có đơn thuê nào. Đơn khách gửi từ trang chính sẽ hiện ở đây.</p>`}
+      </section>`;
+  }
+
+  function confirmBox(title, text, ok, fn) {
+    dlg.innerHTML = `<h2>${title}</h2><p>${text}</p><div class="btn-row" style="margin-top:var(--s-5)"><button class="btn btn--primary" id="ok">${ok}</button><button class="btn btn--secondary" id="no">Giữ lại</button></div>`;
+    dlg.showModal(); $("#ok").onclick = () => { fn(); save(); dlg.close(); render(); }; $("#no").onclick = () => dlg.close();
+  }
+  function resize(file, max) { return new Promise(res => { const r = new FileReader(); r.onload = () => { const im = new Image(); im.onload = () => { const k = Math.min(1, max / Math.max(im.width, im.height)); const c = document.createElement("canvas"); c.width = im.width * k; c.height = im.height * k; c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); res(c.toDataURL("image/jpeg", .8)); }; im.src = r.result; }; r.readAsDataURL(file); }); }
+
+  function toolForm(t) {
+    const edit = !!t; t = t || { id: S.uid(), name: "", cat: S.CATS[0], photo: "", spec: "", price: "", deposit: 100000, buy: "", total: 1, available: 1, restock: "", hidden: false, image: "" };
+    let image = t.image || "";
+    dlg.innerHTML = `<h2>${edit ? "Sửa dụng cụ" : "Thêm dụng cụ"}</h2><form class="form" id="tf" novalidate>
+      <div class="field field--full"><label for="tName">Tên dụng cụ</label><input id="tName" required value="${esc(t.name)}"></div>
+      <div class="field"><label for="tCat">Nhóm</label><select id="tCat">${S.CATS.map(c => `<option ${c === t.cat ? "selected" : ""}>${c}</option>`).join("")}</select></div>
+      <div class="field"><label for="tImg">Ảnh chụp thật</label><input id="tImg" type="file" accept="image/*"></div>
+      <div class="field field--full"><label for="tSpec">Thông số ngắn</label><input id="tSpec" value="${esc(t.spec)}"></div>
+      <div class="field"><label for="tPrice">Giá một lượt ${S.SITE.turnDays} ngày (đ)</label><input id="tPrice" type="number" min="0" step="1000" required value="${t.price}"></div>
+      <div class="field"><label for="tDep">Tiền cọc (đ)</label><input id="tDep" type="number" min="0" step="1000" required value="${t.deposit}"></div>
+      <div class="field"><label for="tBuy">Giá mua mới (đ)</label><input id="tBuy" type="number" min="0" step="1000" value="${t.buy}"></div>
+      <div class="field"><label for="tRe">Ngày có lại khi hết</label><input id="tRe" type="date" value="${t.restock || ""}"></div>
+      <div class="field"><label for="tTotal">Tổng số trong kho</label><input id="tTotal" type="number" min="0" required value="${t.total}"></div>
+      <div class="field"><label for="tAvail">Số đang sẵn sàng</label><input id="tAvail" type="number" min="0" required value="${t.available}"></div>
+      <div class="btn-row"><button class="btn btn--primary" type="submit">${edit ? "Lưu dụng cụ" : "Thêm dụng cụ"}</button><button class="btn btn--secondary" type="button" id="cx">Hủy</button></div>
+      <p class="form__status" id="tfs"></p></form>`;
+    dlg.showModal(); $("#cx").onclick = () => dlg.close();
+    $("#tImg").onchange = e => { const f = e.target.files[0]; if (f) resize(f, 1200).then(d => image = d); };
+    $("#tf").onsubmit = e => {
+      e.preventDefault(); const tot = +$("#tTotal").value, av = +$("#tAvail").value;
+      if (!$("#tf").checkValidity() || !$("#tName").value.trim()) { $("#tfs").textContent = "Điền tên, giá, cọc và số lượng."; return; }
+      if (av > tot) { $("#tfs").textContent = "Số đang sẵn sàng không được lớn hơn tổng số."; return; }
+      Object.assign(t, { name: $("#tName").value.trim(), cat: $("#tCat").value, spec: $("#tSpec").value.trim(), price: +$("#tPrice").value, deposit: +$("#tDep").value, buy: +$("#tBuy").value || 0, restock: $("#tRe").value, total: tot, available: av, image });
+      if (!edit) S.db.tools.push(t); save(); dlg.close(); render(); toast(edit ? "Đã lưu dụng cụ." : "Đã thêm dụng cụ.");
+    };
+  }
+  function comboForm(c) {
+    const edit = !!c; c = c || { id: S.uid(), name: "", photo: "", desc: "", parts: [], price: "", soon: false, hidden: false };
+    dlg.innerHTML = `<h2>${edit ? "Sửa combo" : "Thêm combo"}</h2><form class="form" id="cf" novalidate>
+      <div class="field field--full"><label for="cName">Tên combo</label><input id="cName" value="${esc(c.name)}"></div>
+      <div class="field field--full"><label for="cDesc">Mô tả một câu</label><input id="cDesc" value="${esc(c.desc)}"></div>
+      <fieldset class="field field--full picks" style="border:0;padding:0;margin:0"><legend>Dụng cụ trong combo</legend>
+        ${S.db.tools.map(t => { const p = c.parts.find(x => x.id === t.id); return `<label><input type="checkbox" data-pt="${t.id}" ${p ? "checked" : ""}><input type="number" min="1" value="${p ? p.qty : 1}" data-pq="${t.id}" aria-label="Số lượng ${esc(t.name)}">${esc(t.name)}, ${vnd(t.price)} một lượt</label>`; }).join("")}</fieldset>
+      <div class="field"><label for="cPrice">Giá combo một lượt (đ)</label><input id="cPrice" type="number" min="0" step="1000" value="${c.price}"></div>
+      <div class="field"><label><input type="checkbox" id="cSoon" ${c.soon ? "checked" : ""}> Sắp có, chưa cho đặt</label></div>
+      <div class="btn-row"><button class="btn btn--primary" type="submit">${edit ? "Lưu combo" : "Thêm combo"}</button><button class="btn btn--secondary" type="button" id="cx">Hủy</button></div>
+      <p class="form__status" id="cfs"></p></form>`;
+    dlg.showModal(); $("#cx").onclick = () => dlg.close();
+    $("#cf").onsubmit = e => {
+      e.preventDefault();
+      const parts = [...dlg.querySelectorAll("[data-pt]")].filter(x => x.checked).map(x => ({ id: x.dataset.pt, qty: Math.max(1, +dlg.querySelector(`[data-pq="${x.dataset.pt}"]`).value || 1) }));
+      const soon = $("#cSoon").checked;
+      if (!$("#cName").value.trim() || (!soon && (!parts.length || $("#cPrice").value === ""))) { $("#cfs").textContent = "Điền tên, chọn ít nhất một dụng cụ và giá combo."; return; }
+      Object.assign(c, { name: $("#cName").value.trim(), desc: $("#cDesc").value.trim(), parts, price: +$("#cPrice").value || 0, soon });
+      if (!edit) S.db.combos.push(c); save(); dlg.close(); render(); toast(edit ? "Đã lưu combo." : "Đã thêm combo.");
+    };
+  }
+
+  root.addEventListener("click", e => {
+    const d = e.target.dataset || {}, id = e.target.id;
+    if (d.t) { tab = d.t; render(); return; }
+    if (id === "logout") { sessionStorage.removeItem("st_admin"); render(); return; }
+    if (id === "addTool") return toolForm();
+    if (id === "addCombo") return comboForm();
+    if (d.inc) { const t = S.tool(d.inc); if (t.available < t.total) { t.available++; save(); render(); } else toast("Không vượt quá tổng số trong kho."); return; }
+    if (d.dec) { const t = S.tool(d.dec); if (t.available > 0) { t.available--; save(); render(); } return; }
+    if (d.edit) return toolForm(S.tool(d.edit));
+    if (d.hide) { const t = S.tool(d.hide); t.hidden = !t.hidden; save(); render(); return; }
+    if (d.del) { const t = S.tool(d.del); return confirmBox(`Xóa ${esc(t.name)}?`, "Món này bị xóa hẳn và bị gỡ khỏi các combo có nó. Muốn tạm ngừng cho thuê thì dùng nút Ẩn.", "Xóa dụng cụ", () => { S.db.tools = S.db.tools.filter(x => x.id !== t.id); S.db.combos.forEach(c => c.parts = c.parts.filter(p => p.id !== t.id)); }); }
+    if (d.cedit) return comboForm(S.combo(d.cedit));
+    if (d.chide) { const c = S.combo(d.chide); c.hidden = !c.hidden; save(); render(); return; }
+    if (d.cdel) { const c = S.combo(d.cdel); return confirmBox(`Xóa ${esc(c.name)}?`, "Combo bị gỡ khỏi trang chính. Các món lẻ bên trong vẫn giữ nguyên.", "Xóa combo", () => { S.db.combos = S.db.combos.filter(x => x.id !== c.id); }); }
+    if (id === "exp") { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(S.db, null, 2)], { type: "application/json" })); a.download = "sharetool-du-lieu.json"; a.click(); return; }
+    if (id === "reset") return confirmBox("Khôi phục dữ liệu mẫu?", "Kho, combo và đơn thuê trên trình duyệt này sẽ được thay bằng dữ liệu mẫu 45 dụng cụ.", "Khôi phục", () => { S.db = S.seed(); });
+  });
+  root.addEventListener("change", e => {
+    if (e.target.id === "imp") { const f = e.target.files[0]; if (!f) return; f.text().then(txt => { try { const x = JSON.parse(txt); if (!Array.isArray(x.tools)) throw 0; S.db = { tools: x.tools, combos: x.combos || [], orders: x.orders || [] }; save(); render(); toast("Đã nhập dữ liệu."); } catch (_) { toast("File không đúng dữ liệu SHARETOOL."); } }); return; }
+    const oid = e.target.dataset.ord; if (!oid) return;
+    const o = S.db.orders.find(x => x.id === oid), prev = o.status, next = e.target.value, out = s => s === "Đang thuê", need = S.need(o.lines);
+    if (!out(prev) && out(next)) {
+      const lack = Object.entries(need).find(([tid, q]) => !S.tool(tid) || S.tool(tid).available < q);
+      if (lack) { toast(`Không đủ ${S.tool(lack[0])?.name || "dụng cụ"} trong kho.`); e.target.value = prev; return; }
+      Object.entries(need).forEach(([tid, q]) => S.tool(tid).available -= q);
+    }
+    if (out(prev) && !out(next)) Object.entries(need).forEach(([tid, q]) => { const t = S.tool(tid); if (t) t.available = Math.min(t.total, t.available + q); });
+    o.status = next; save(); render(); toast(`Đơn ${o.id.toUpperCase()}: ${next}.`);
+  });
+  addEventListener("storage", e => { if (e.key === S.KEY) { S.reload(); render(); } });
+  render();
+})();
+</script>
+</body>
+</html>
